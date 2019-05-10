@@ -78,7 +78,7 @@ class VGG:
         predicts = last_dense(inputs, self.labels_num)
         self.values_dict['predicts'] = predicts
 
-        loss = tf.reduce_sum(self.labels_ph * tf.log(predicts + 1e-8))
+        loss = - tf.reduce_sum(self.labels_ph * tf.log(predicts + 1e-8) + (1 - self.labels_ph) * tf.log(1 - predicts + 1e-8))
         self.values_dict['loss'] = loss
 
         self.values_dict['loss_with_reg'] = loss + self.reg_cf * self.values_dict['reg_loss']
@@ -110,7 +110,7 @@ class VGG:
         predicts = last_dense(inputs, self.labels_num)
         self.values_dict['predicts'] = predicts
 
-        loss = tf.reduce_sum(self.labels_ph * tf.log(predicts + 1e-8))
+        loss = - tf.reduce_sum(self.labels_ph * tf.log(predicts + 1e-8) + (1 - self.labels_ph) * tf.log(1 - predicts + 1e-8))
         self.values_dict['loss'] = loss
 
         self.values_dict['loss_with_reg'] = loss + self.reg_cf * self.values_dict['reg_loss']
