@@ -31,20 +31,20 @@ class Loader:
 
     def _process_feature(self):
         train_feature = self._raw_train_data[0]
-        train_feature = train_feature / 255. - 0.5
+        train_feature = 2 * (train_feature / 255.) - 1.
         self.train_feature = train_feature
 
         test_feature = self._raw_test_data[0]
-        test_feature = test_feature / 255. - 0.5
+        test_feature = 2 * (test_feature / 255.) - 1.
         self.test_feature = test_feature
 
     def _process_label(self):
-        train_label = self._raw_train_data[1]
+        train_label = self._raw_train_data[1].reshape(-1)
         one_hot_train_label = np.zeros([self._train_size, self._label_num], np.float32)
         one_hot_train_label[np.arange(self._train_size), train_label] = 1.
         self.train_label = one_hot_train_label
 
-        test_label = self._raw_test_data[1]
+        test_label = self._raw_test_data[1].reshape(-1)
         one_hot_test_label = np.zeros([self._test_size, self._label_num], np.float32)
         one_hot_test_label[np.arange(self._test_size), test_label] = 1.
         self.test_label = one_hot_test_label
@@ -66,6 +66,7 @@ class Loader:
             y = np.vstack([self.train_label[self.train_checking:], self.train_label[:start_nums+1]])
             self.train_checking = start_nums
             print('new epoch', self.epoch_count)
+            self.epoch_count += 1
 
         if flatten:
             x = x.reshape(batch_size, self._feature_num)
@@ -82,3 +83,7 @@ class Loader:
                 return self.test_feature[..., np.newaxis], self.test_label
             else:
                 return self.test_feature, self.test_label
+
+
+if __name__ == '__main__':
+    loader = Loader()
