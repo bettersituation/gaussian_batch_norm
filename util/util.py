@@ -1,6 +1,42 @@
+from collections import defaultdict
 from pathlib import Path
 import numpy as np
 import tensorflow as tf
+
+
+def iter_batch(features, labels, batch_size):
+    pos = 0
+    size = labels.shape[0]
+    if size % batch_size != 0:
+        raise Exception('batch size must divide test size: {}'.format(size))
+
+    while pos != size:
+        next_pos = min(pos + batch_size, size)
+        iter_features = features[pos:next_pos]
+        iter_labels = labels[pos:next_pos]
+        pos = next_pos
+        yield iter_features, iter_labels
+
+
+def calc_mean_of_means(means):
+    return sum(means) / len(means)
+
+
+def calc_max_of_max(maxs):
+    return max(maxs)
+
+
+def calc_min_of_min(mins):
+    return min(mins)
+
+
+def augment_dict_values(dicts):
+    append_dict = defaultdict(list)
+    for dt in dicts:
+        for k, v in dt.items():
+            append_dict[k].append(v)
+    aug_dict = {k: np.vstack(v) for k, v in append_dict.items()}
+    return aug_dict
 
 
 def calc_cross_entropy(predicts, labels):

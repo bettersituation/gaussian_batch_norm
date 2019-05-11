@@ -16,7 +16,7 @@ class VGG:
         self.labels_ph = tf.placeholder(dtype=tf.float32, shape=[None, labels_num], name='labels')
         self.training_ph = tf.placeholder(dtype=tf.bool, shape=None, name='training')
         self.values_dict = dict()
-        self.values_dict['bn_values'] = dict()
+        self.values_dict['normed_values'] = dict()
         self.values_dict['gradients'] = dict()
         self._set_graph()
         self._set_gradients()
@@ -33,16 +33,16 @@ class VGG:
         predicts = self.sess.run(self.values_dict['predicts'], feed_dict=feed_dict)
         return predicts
 
-    def get_bn_values(self, x):
+    def get_normed_values(self, x):
         feed_dict = {self.inputs_ph: x, self.training_ph: False}
         eval_keys = []
         eval_tensors = []
-        for key, tensor in self.values_dict['bn_values'].items():
+        for key, tensor in self.values_dict['normed_values'].items():
             eval_keys.append(key)
             eval_tensors.append(tensor)
 
-        bn_values = self.sess.run(eval_tensors, feed_dict=feed_dict)
-        return {key: bn_value for key, bn_value in zip(eval_keys, bn_values)}
+        normed_values = self.sess.run(eval_tensors, feed_dict=feed_dict)
+        return {key: bn_value for key, bn_value in zip(eval_keys, normed_values)}
 
     def get_gradients(self, x, y):
         feed_dict = {self.inputs_ph: x, self.labels_ph: y, self.training_ph: False}
@@ -69,7 +69,7 @@ class VGG:
     def _set_vgg(self, conv_layers):
         self.values_dict['reg_loss'] = 0.
         bn_func, use_bias = self._get_bn_func()
-        store_bn = self.store_bn_values
+        store_bn = self.store_normed_values
 
         reg_loss = 0
 
@@ -97,7 +97,8 @@ class VGG:
         predicts = last_dense(inputs, self.labels_num)
         self.values_dict['predicts'] = predicts
 
-        loss = - tf.reduce_sum(self.labels_ph * tf.log(predicts + 1e-8) + (1 - self.labels_ph) * tf.log(1 - predicts + 1e-8))
+        errors = self.labels_ph * tf.log(predicts + 1e-8) + (1 - self.labels_ph) * tf.log(1 - predicts + 1e-8)
+        loss = - tf.reduce_mean(tf.reduce_sum(errors, 1))
 
         self.values_dict['loss'] = loss
         self.values_dict['loss_with_reg'] = loss + self.reg_cf * self.values_dict['reg_loss']
@@ -122,8 +123,8 @@ class VGG:
         if self.batch_norm_type == 'rigid_batch_norm':
             return rigid_batch_norm, False
 
-    def store_bn_values(self, key, bn_values):
-        self.values_dict['bn_values'][key] = bn_values
+    def store_normed_values(self, key, normed_values):
+        self.values_dict['normed_values'][key] = normed_values
 
 
 if __name__ == '__main__':

@@ -7,20 +7,23 @@ class Tensorboard:
         self._board_path = board_path
         self.board = tf.summary.FileWriter(board_path, graph=tf.get_default_graph())
 
-    def add_scalar(self, tag, scalar, step, flush=False):
+    def add_scalar(self, tag, scalar, step, flush=False, prefix=None):
+        if prefix is not None:
+            tag = prefix + '/' + tag
         summary = tf.Summary(value=[tf.Summary.Value(tag=tag, simple_value=scalar)])
         self.board.add_summary(summary, step)
         if flush:
             self.board.flush()
 
-    def add_scalars(self, tag_scalar_dict, step, flush=False):
+    def add_scalars(self, tag_scalar_dict, step, flush=False, prefix=None):
         for tag, scalar in tag_scalar_dict.items():
-            summary = tf.Summary(value=[tf.Summary.Value(tag=tag, simple_value=scalar)])
-            self.board.add_summary(summary, step)
+            self.add_scalar(tag, scalar, step, flush=False, prefix=prefix)
         if flush:
             self.board.flush()
 
-    def add_histogram(self, tag, values, step, flush=False, bins=100):
+    def add_histogram(self, tag, values, step, flush=False, bins=100, prefix=None):
+        if prefix is not None:
+            tag = prefix + '/' + tag
         if not isinstance(values, np.ndarray):
             values = np.array(values)
 
@@ -42,5 +45,11 @@ class Tensorboard:
 
         summary = tf.Summary(value=[tf.Summary.Value(tag=tag, histo=hist)])
         self.board.add_summary(summary, step)
+        if flush:
+            self.board.flush()
+
+    def add_histograms(self, tag_values_dict, step, flush=False, bins=100, prefix=None):
+        for tag, values in tag_values_dict.items():
+            self.add_histogram(tag, values, step, flush=False, bins=bins, prefix=prefix)
         if flush:
             self.board.flush()
