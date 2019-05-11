@@ -23,13 +23,15 @@ def batch_norm(scope, inputs, training_ph, *args):
         update_mean_op = tf.assign(mean, decay * mean + (1 - decay) * batch_mean)
         update_variance_op = tf.assign(variance, decay * variance + (1 - decay) * batch_variance)
         with tf.control_dependencies([update_mean_op, update_variance_op]):
-            return batch_mean, batch_variance
+            normed = tf.nn.batch_normalization(inputs, batch_mean, batch_variance, beta, gamma, variance_epsilon=eps)
+            return normed
 
     def test():
-        return mean, variance
+        normed = tf.nn.batch_normalization(inputs, mean, variance, beta, gamma, variance_epsilon=eps)
+        return normed
 
-    proper_mean, proper_variance = tf.cond(training_ph, train, test)
-    return tf.nn.batch_normalization(inputs, proper_mean, proper_variance, beta, gamma, variance_epsilon=eps), 0.
+    normed = tf.cond(training_ph, train, test)
+    return normed, 0.
 
 
 def rigid_batch_norm(scope, inputs, training_ph, bound, *args):
@@ -57,15 +59,16 @@ def rigid_batch_norm(scope, inputs, training_ph, bound, *args):
         update_mean_op = tf.assign(mean, decay * mean + (1 - decay) * omitted_batch_mean)
         update_variance_op = tf.assign(variance, decay * variance + (1 - decay) * omitted_batch_variance)
         with tf.control_dependencies([update_mean_op, update_variance_op]):
-            return omitted_batch_mean, omitted_batch_variance
+            normed = tf.nn.batch_normalization(inputs, omitted_batch_mean, omitted_batch_variance, beta, gamma, variance_epsilon=eps)
+            return normed
 
     def test():
-        return mean, variance
+        normed = tf.nn.batch_normalization(inputs, mean, variance, beta, gamma, variance_epsilon=eps)
+        return normed
 
-    proper_mean, proper_variance = tf.cond(training_ph, train, test)
-    rigid_normalized = tf.nn.batch_normalization(inputs, proper_mean, proper_variance, beta, gamma, variance_epsilon=eps)
+    rigid_normed = tf.cond(training_ph, train, test)
 
-    reg_recognized = tf.nn.relu(rigid_normalized - bound) + tf.nn.relu(- rigid_normalized - bound)
+    reg_recognized = tf.nn.relu(rigid_normed - bound) + tf.nn.relu(- rigid_normed - bound)
     reg_sum = tf.reduce_sum(tf.square(reg_recognized))
 
-    return rigid_normalized, reg_sum
+    return tf.clip_by_value(rigid_normed, -bound, bound), reg_sum

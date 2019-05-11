@@ -71,6 +71,8 @@ class VGG:
         bn_func, use_bias = self._get_bn_func()
         store_bn = self.store_bn_values
 
+        reg_loss = 0
+
         conv = partial(tf.layers.conv2d, kernel_size=(3, 3), strides=1, padding='same', activation=tf.nn.relu, use_bias=use_bias)
         max_pool = partial(tf.layers.max_pooling2d, pool_size=(2, 2), strides=2)
 
@@ -80,7 +82,8 @@ class VGG:
         inputs = self.inputs_ph
         for i, layers in enumerate(conv_layers):
             if isinstance(layers, int):
-                inputs, reg_loss = bn_func('conv_{}'.format(i), conv(inputs, layers), self.training_ph, self.bound)
+                # inputs, reg_loss = bn_func('conv_{}'.format(i), conv(inputs, layers), self.training_ph, self.bound)
+                inputs = tf.layers.batch_normalization(conv(inputs, layers), axis=-1, training=self.training_ph)
                 self.values_dict['reg_loss'] += reg_loss
                 store_bn('conv_{}'.format(i), inputs)
             else:
@@ -89,6 +92,7 @@ class VGG:
         inputs = tf.layers.flatten(inputs)
         for i, layers in enumerate([512, 512]):
             inputs, reg_loss = bn_func('dense_{}'.format(i), dense(inputs, layers), self.training_ph, self.bound)
+            # inputs = tf.layers.batch_normalization(dense(inputs, layers), axis=-1, training=self.training_ph)
             self.values_dict['reg_loss'] += reg_loss
             store_bn('dense_{}'.format(i), inputs)
 

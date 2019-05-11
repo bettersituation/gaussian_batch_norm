@@ -70,10 +70,6 @@ def run_func(args):
             grad_absmax = recursive_absmax(gradients)
             grad_absmin = recursive_absmin(gradients)
 
-            if i > 100:
-                print('wefwef')
-                break
-
             loss, acc = net.train(batch_features, batch_labels)
             print('{} step - train - loss: {:.6f} - acc: {:.6f}'.format(i, loss, acc))
 
@@ -92,9 +88,9 @@ if __name__ == '__main__':
         sub_path = 'test3'
         data_type = 'cifar10'
         vgg_name = 'vgg16'
-        batch_norm = 'batch_norm'
-        bound = 3
-        reg_cf = 0.1
+        batch_norm = 'rigid_batch_norm'
+        bound = 10
+        reg_cf = 0.001
         lr = 0.0001
         batch_size = 256
 
