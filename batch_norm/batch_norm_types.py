@@ -3,7 +3,7 @@ import tensorflow as tf
 
 
 def none_batch_norm(scope, inputs, *args):
-    return inputs, 0.
+    return inputs, 0., inputs
 
 
 def batch_norm(scope, inputs, training_ph, *args):
@@ -23,21 +23,23 @@ def batch_norm(scope, inputs, training_ph, *args):
         update_mean_op = tf.assign(mean, decay * mean + (1 - decay) * batch_mean)
         update_variance_op = tf.assign(variance, decay * variance + (1 - decay) * batch_variance)
         with tf.control_dependencies([update_mean_op, update_variance_op]):
-            normed = tf.nn.batch_normalization(inputs, batch_mean, batch_variance, beta, gamma, variance_epsilon=eps)
+            normed = tf.nn.batch_normalization(inputs, batch_mean, batch_variance, 0., 1., variance_epsilon=eps)
             return normed
 
     def test():
-        normed = tf.nn.batch_normalization(inputs, mean, variance, beta, gamma, variance_epsilon=eps)
+        normed = tf.nn.batch_normalization(inputs, mean, variance, 0., 1., variance_epsilon=eps)
         return normed
 
     normed = tf.cond(training_ph, train, test)
-    return normed, 0.
+    bn_normed = gamma * normed + beta
+    return bn_normed, 0., normed
 
 
 def rigid_batch_norm(scope, inputs, training_ph, bound, *args):
     eps = 1e-8
     ndims = inputs.get_shape().ndims
     compress_axes = [i for i in range(ndims - 1)]
+    reduced_axes = [i for i in range(1, ndims)]
     shape = inputs.get_shape().as_list()[-1]
     with tf.variable_scope('{}/bn'.format(scope)):
         gamma = tf.get_variable('gamma', shape, tf.float32, tf.ones_initializer(), trainable=True)
@@ -59,16 +61,17 @@ def rigid_batch_norm(scope, inputs, training_ph, bound, *args):
         update_mean_op = tf.assign(mean, decay * mean + (1 - decay) * omitted_batch_mean)
         update_variance_op = tf.assign(variance, decay * variance + (1 - decay) * omitted_batch_variance)
         with tf.control_dependencies([update_mean_op, update_variance_op]):
-            normed = tf.nn.batch_normalization(inputs, omitted_batch_mean, omitted_batch_variance, beta, gamma, variance_epsilon=eps)
+            normed = tf.nn.batch_normalization(inputs, omitted_batch_mean, omitted_batch_variance, 0., 1., variance_epsilon=eps)
             return normed
 
     def test():
-        normed = tf.nn.batch_normalization(inputs, mean, variance, beta, gamma, variance_epsilon=eps)
+        normed = tf.nn.batch_normalization(inputs, mean, variance, 0., 1., variance_epsilon=eps)
         return normed
 
-    rigid_normed = tf.cond(training_ph, train, test)
-
+    omitted_normed = tf.cond(training_ph, train, test)
     reg_recognized = tf.nn.relu(rigid_normed - bound) + tf.nn.relu(- rigid_normed - bound)
-    reg_sum = tf.reduce_sum(tf.square(reg_recognized))
+    reg_sum = tf.reduce_sum(tf.reduce_mean(tf.square(reg_recognized), reduced_axes))
 
-    return tf.clip_by_value(rigid_normed, -bound, bound), reg_sum
+    rigid_normed = gamma * tf.clip_by_value(rigid_normed, -bound, bound) + beta
+
+    return rigid_normed, reg_sum, omitted_normed

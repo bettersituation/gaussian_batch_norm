@@ -82,19 +82,17 @@ class VGG:
         inputs = self.inputs_ph
         for i, layers in enumerate(conv_layers):
             if isinstance(layers, int):
-                # inputs, reg_loss = bn_func('conv_{}'.format(i), conv(inputs, layers), self.training_ph, self.bound)
-                inputs = tf.layers.batch_normalization(conv(inputs, layers), axis=-1, training=self.training_ph)
+                inputs, reg_loss, normed = bn_func('conv_{}'.format(i), conv(inputs, layers), self.training_ph, self.bound)
                 self.values_dict['reg_loss'] += reg_loss
-                store_bn('conv_{}'.format(i), inputs)
+                store_bn('conv_{}'.format(i), normed)
             else:
                 inputs = max_pool(inputs)
 
         inputs = tf.layers.flatten(inputs)
         for i, layers in enumerate([512, 512]):
-            inputs, reg_loss = bn_func('dense_{}'.format(i), dense(inputs, layers), self.training_ph, self.bound)
-            # inputs = tf.layers.batch_normalization(dense(inputs, layers), axis=-1, training=self.training_ph)
+            inputs, reg_loss, normed = bn_func('dense_{}'.format(i), dense(inputs, layers), self.training_ph, self.bound)
             self.values_dict['reg_loss'] += reg_loss
-            store_bn('dense_{}'.format(i), inputs)
+            store_bn('dense_{}'.format(i), normed)
 
         predicts = last_dense(inputs, self.labels_num)
         self.values_dict['predicts'] = predicts
@@ -103,7 +101,9 @@ class VGG:
 
         self.values_dict['loss'] = loss
         self.values_dict['loss_with_reg'] = loss + self.reg_cf * self.values_dict['reg_loss']
-        self.values_dict['acc'] = tf.reduce_mean(tf.cast(tf.equal(tf.argmax(predicts, 1), tf.argmax(self.labels_ph, 1)), tf.float32))
+
+        matched = tf.cast(tf.equal(tf.argmax(predicts, 1), tf.argmax(self.labels_ph, 1)), tf.float32)
+        self.values_dict['acc'] = tf.reduce_mean(matched)
 
     def _set_gradients(self):
         vs = tf.trainable_variables()
