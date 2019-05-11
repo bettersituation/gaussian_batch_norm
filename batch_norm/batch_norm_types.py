@@ -72,6 +72,6 @@ def rigid_batch_norm(scope, inputs, training_ph, bound, *args):
     reg_recognized = tf.nn.relu(rigid_normed - bound) + tf.nn.relu(- rigid_normed - bound)
     reg_sum = tf.reduce_sum(tf.reduce_mean(tf.square(reg_recognized), reduced_axes))
 
-    rigid_normed = gamma * tf.clip_by_value(rigid_normed, -bound, bound) + beta
+    rigid_normed = gamma * tf.clip_by_value(omitted_normed, -bound, bound) + beta
 
     return rigid_normed, reg_sum, omitted_normed
