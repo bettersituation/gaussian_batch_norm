@@ -15,13 +15,6 @@ class Loader:
         elif data_type == 'cifar100':
             self._raw_train_data, self._raw_test_data = tf.keras.datasets.cifar100.load_data()
 
-        self._train_size = self._raw_train_data[1].shape[0]
-        self._test_size = self._raw_test_data[1].shape[0]
-
-        self._feature_shape = self._raw_test_data[0][0].shape
-        self._feature_num = self._raw_test_data[0][0].size
-        self._label_num = self._raw_test_data[1].max() + 1
-
         self.train_feature = None
         self.train_label = None
         self.test_feature = None
@@ -30,6 +23,13 @@ class Loader:
         self.epoch_count = 0
         self._process_feature()
         self._process_label()
+
+        self._train_size = self._raw_train_data[1].shape[0]
+        self._test_size = self._raw_test_data[1].shape[0]
+
+        self._feature_shape = self.train_feature[0].shape
+        self._feature_num = self.train_feature[0].size
+        self._label_num = self._raw_test_data[1].max() + 1
 
         print('load data:', data_type)
         print('train cases:', self._train_size)
