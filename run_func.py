@@ -34,7 +34,7 @@ def run_func(args):
     columns = ['phase', 'epoch', 'reg_loss', 'loss', 'acc', 'normed_max', 'normed_min', 'gradient_max', 'gradient_min']
     csv_writer.writerow(columns)
 
-    for i in range(1, ITERATION_NUMS + 1):
+    for i in range(1, args.epoch + 1):
         # train
         train_features, train_labels = loader.get_train_data()
         for batch_features, batch_labels in iter_batch(train_features, train_labels, args.batch_size):
@@ -112,7 +112,7 @@ def run_func(args):
 
         print('{} epoch - valid - reg_loss: {:.6f} loss: {:.6f} - acc: {:.6f}'.format(i, reg_loss, loss, acc))
 
-        contents = ['train', i, reg_loss, loss, acc, normed_max_of_max, normed_min_of_min, grad_max_of_max, grad_min_of_min]
+        contents = ['valid', i, reg_loss, loss, acc, normed_max_of_max, normed_min_of_min, grad_max_of_max, grad_min_of_min]
         print(contents)
         csv_writer.writerow(contents)
 
@@ -124,10 +124,11 @@ if __name__ == '__main__':
         sub_path = 'test0'
         data_type = 'cifar10'
         net_name = 'vgg16'
-        batch_norm = 'rigid_batch_norm'
+        batch_norm = 'batch_norm'
         bound = 5
         reg_cf = 1
         lr = 0.01
         batch_size = 200
+        epoch = 50
 
     run_func(Args)

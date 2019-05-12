@@ -10,6 +10,7 @@ def get_parser():
     _reg_cf = 1e-3
     _lr = 1e-3
     _batch_size = 256
+    _epoch = 100
 
     parser = argparse.ArgumentParser(description='Run and logging an experiment or a rigid batch norm')
     parser.add_argument('--data_type',
@@ -46,6 +47,11 @@ def get_parser():
                         default=_batch_size,
                         type=int,
                         help='training batch size (default: %(default)s)'
+                        )
+    parser.add_argument('--epoch',
+                        default=_epoch,
+                        type=int,
+                        help='epoch nums (default: %(default)s)'
                         )
     return parser
 
