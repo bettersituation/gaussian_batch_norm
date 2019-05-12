@@ -30,8 +30,8 @@ Batch Normalization: Accelerating Deep Network Training byReducing Internal Cova
 
 
 ### Comparison
-1. Normalization: None, BN, RBN
+1. Normalization: None, BN, RBN, CRBN
 2. lr: 1e-2, 5e-3, 1e-3
-3. bound: 5, 7, 10
+3. bound: 3, 5, 7
 4. reg cf: 0.5, 1, 1.5, 2
 5. batch size: 50, 100, 200

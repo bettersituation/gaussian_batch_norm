@@ -80,10 +80,10 @@ class Net:
         bn_func, use_bias = self._get_bn_func()
         store_normed = self.store_normed_values
 
-        conv = partial(tf.layers.conv2d, kernel_size=(kernel_size, kernel_size), strides=1, padding='same', activation=tf.nn.relu, use_bias=use_bias)
+        conv = partial(tf.layers.conv2d, kernel_size=(kernel_size, kernel_size), strides=1, padding='same', activation=None, use_bias=use_bias)
         max_pool = partial(tf.layers.max_pooling2d, pool_size=(2, 2), strides=2)
 
-        dense = partial(tf.layers.dense, activation=tf.nn.relu)
+        dense = partial(tf.layers.dense, activation=None)
         last_dense = partial(tf.layers.dense, activation=tf.nn.softmax)
 
         inputs = self.inputs_ph
@@ -93,6 +93,7 @@ class Net:
                 inputs, reg_loss, normed = bn_func('conv_{}'.format(i), conv(inputs, layers), self.training_ph, self.bound)
                 self.values_dict['reg_loss'] += reg_loss
                 store_normed('conv_{}'.format(i), normed)
+                inputs = tf.nn.relu(inputs)
             elif isinstance(layers, str) and (layers == 'M'):
                 inputs = max_pool(inputs)
 
@@ -101,6 +102,7 @@ class Net:
             inputs, reg_loss, normed = bn_func('dense_{}'.format(i), dense(inputs, layers), self.training_ph, self.bound)
             self.values_dict['reg_loss'] += reg_loss
             store_normed('dense_{}'.format(i), normed)
+            inputs = tf.nn.relu(inputs)
 
         predicts = last_dense(inputs, self.labels_num)
         self.values_dict['predicts'] = predicts
@@ -133,12 +135,15 @@ class Net:
         if self.batch_norm_type == 'rigid_batch_norm':
             return rigid_batch_norm, False
 
+        if self.batch_norm_type == 'clipped_rigid_batch_norm':
+            return clipped_rigid_batch_norm, False
+
     def store_normed_values(self, key, normed_values):
         self.values_dict['normed_values'][key] = normed_values
 
 
 if __name__ == '__main__':
-    vgg19 = Net(tf.Session(), 100, 'vgg16', 'rigid_batch_norm', 2, 0.2, 0.1)
+    vgg19 = Net(tf.Session(), [32, 32, 3], 100, 'vgg16', 'rigid_batch_norm', 2, 0.2, 0.1)
     for v in tf.trainable_variables():
         print(v)
 
