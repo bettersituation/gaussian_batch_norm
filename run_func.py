@@ -73,7 +73,6 @@ def run_func(args):
         print('{} epoch - train - reg loss: {:.6f} loss: {:.6f} - acc: {:.6f}'.format(i, reg_loss, loss, acc))
 
         contents = ['train', i, reg_loss, loss, acc, normed_max_of_max, normed_min_of_min, grad_max_of_max, grad_min_of_min]
-        print(contents)
         csv_writer.writerow(contents)
 
         # valid
@@ -113,7 +112,6 @@ def run_func(args):
         print('{} epoch - valid - reg_loss: {:.6f} loss: {:.6f} - acc: {:.6f}'.format(i, reg_loss, loss, acc))
 
         contents = ['valid', i, reg_loss, loss, acc, normed_max_of_max, normed_min_of_min, grad_max_of_max, grad_min_of_min]
-        print(contents)
         csv_writer.writerow(contents)
 
     csv_writer.close()
