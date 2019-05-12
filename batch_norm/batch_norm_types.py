@@ -2,7 +2,7 @@ import tensorflow as tf
 
 
 def none_batch_norm(scope, inputs, *args):
-    return inputs, 0., inputs
+    return inputs, tf.constant(1., tf.float32), inputs
 
 
 def batch_norm(scope, inputs, training_ph, *args):
@@ -34,7 +34,7 @@ def batch_norm(scope, inputs, training_ph, *args):
 
     normed = tf.cond(training_ph, train, test)
     bn_normed = gamma * normed + beta
-    return bn_normed, 0., normed
+    return bn_normed, tf.constant(1., tf.float32), normed
 
 
 def rigid_batch_norm(scope, inputs, training_ph, bound, *args):

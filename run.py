@@ -66,7 +66,10 @@ if __name__ == '__main__':
 
     except Exception as e:
         from config.config import DEFAULT_PATH
-        error_log_fn = DEFAULT_PATH / (args.sub_path + '/error.txt')
-        error_log_fn.mkdir(parents=True, exist_ok=True)
-        with open('error.txt', 'w') as f:
+        from util.util import make_dir
+        error_log_dir = DEFAULT_PATH + '/' + args.sub_path
+        error_log_fn = error_log_dir + '/error.txt'
+        make_dir(error_log_dir)
+        with open(error_log_fn, 'w') as f:
             f.write(str(e))
+        raise e
