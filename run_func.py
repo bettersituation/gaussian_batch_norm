@@ -14,14 +14,14 @@ def run_func(args):
     make_dir(folder_path + '/board')
 
     loader = Loader(args.data_type)
-    _, label_num = loader.get_shape()
+    input_shape, label_num = loader.get_shape()
     test_features, test_labels = loader.get_test_data()
 
     config = tf.ConfigProto()
     config.gpu_options.allow_growth = True
     sess = tf.Session(config=config)
 
-    net = Net(sess, label_num, args.net_name, args.batch_norm, args.bound, args.reg_cf, args.lr)
+    net = Net(sess, input_shape, label_num, args.net_name, args.batch_norm, args.bound, args.reg_cf, args.lr)
 
     normed_keys = net.get_normed_keys()
     gradient_keys = net.get_gradient_keys()

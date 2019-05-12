@@ -38,10 +38,14 @@ class Loader:
     def _process_feature(self):
         train_feature = self._raw_train_data[0]
         train_feature = 2 * (train_feature / 255.) - 1.
+        if train_feature.ndim == 3:
+            train_feature = train_feature[..., np.newaxis]
         self.train_feature = train_feature
 
         test_feature = self._raw_test_data[0]
         test_feature = 2 * (test_feature / 255.) - 1.
+        if test_feature.ndim == 3:
+            test_feature = test_feature[..., np.newaxis]
         self.test_feature = test_feature
 
     def _process_label(self):
@@ -73,10 +77,7 @@ class Loader:
         if flatten:
             return train_features.reshape(self._train_size, self._feature_num), train_labels
         else:
-            if train_features.ndim == 3:
-                return train_features[..., np.newaxis], train_labels
-            else:
-                return train_features, train_labels
+            return train_features, train_labels
 
     def get_test_data(self, flatten=False, shuffle=False):
         if shuffle:
@@ -90,10 +91,7 @@ class Loader:
         if flatten:
             return test_features.reshape(self._test_size, self._feature_num), test_labels
         else:
-            if test_features.ndim == 3:
-                return test_features[..., np.newaxis], test_labels
-            else:
-                return test_features, test_labels
+            return test_features, test_labels
 
 
 if __name__ == '__main__':

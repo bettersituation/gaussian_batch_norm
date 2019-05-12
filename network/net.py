@@ -4,15 +4,16 @@ from batch_norm.batch_norm_types import *
 
 
 class Net:
-    def __init__(self, sess, labels_num, net_name, batch_norm_type, bound, reg_cf, lr):
+    def __init__(self, sess, input_shape, labels_num, net_name, batch_norm_type, bound, reg_cf, lr):
         self.sess = sess
+        self.input_shape = input_shape
         self.labels_num = labels_num
         self.net_name = net_name
         self.batch_norm_type = batch_norm_type
         self.bound = bound
         self.reg_cf = reg_cf
         self.lr = lr
-        self.inputs_ph = tf.placeholder(dtype=tf.float32, shape=[None, 32, 32, 3], name='inputs')
+        self.inputs_ph = tf.placeholder(dtype=tf.float32, shape=[None, *input_shape], name='inputs')
         self.labels_ph = tf.placeholder(dtype=tf.float32, shape=[None, labels_num], name='labels')
         self.training_ph = tf.placeholder(dtype=tf.bool, shape=None, name='training')
         self.values_dict = dict()
