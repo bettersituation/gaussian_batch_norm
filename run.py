@@ -14,17 +14,17 @@ def get_parser():
     parser = argparse.ArgumentParser(description='Run and logging an experiment or a rigid batch norm')
     parser.add_argument('--data_type',
                         default=_data_type,
-                        choices=['cifar10', 'cifar100'],
+                        choices=('mnist', 'fashion_mnist', 'cifar10', 'cifar100'),
                         help='data type which will be loaded (default: %(default)s) (choices: %(choices)s)'
                         )
-    parser.add_argument('--vgg_name',
+    parser.add_argument('--net_name',
                         default=_vgg_name,
-                        choices=['vgg16, vgg19'],
+                        choices=('vgg16', 'simple'),
                         help='model type will be trained (default: %(default)s) (choices: %(choices)s)'
                         )
     parser.add_argument('--batch_norm',
                         default=_bath_norm,
-                        choices=['none', 'batch_norm', 'rigid_batch_norm'],
+                        choices=('none', 'batch_norm', 'rigid_batch_norm'),
                         help='batch norm which will be used (default: %(default)s) (choices: %(choices)s)'
                         )
     parser.add_argument('--bound',
@@ -54,11 +54,19 @@ if __name__ == '__main__':
     parser = get_parser()
     args = parser.parse_args()
 
-    kwargs = (args.data_type, args.vgg_name, args.batch_norm, args.bound, args.reg_cf, args.lr, args.batch_size)
+    kwargs = (args.data_type, args.net_name, args.batch_norm, args.bound, args.reg_cf, args.lr, args.batch_size)
     args.sub_path = '{}_{}_{}_bound_{:4.2e}_reg_cf_{:4.2e}_lr_{:4.2e}_batch_{}'.format(*kwargs)
 
     print('setting as follows')
     for arg in vars(args):
         print('{} : {}'.format(arg, getattr(args, arg)))
 
-    run_func(args)
+    try:
+        run_func(args)
+
+    except Exception as e:
+        from config.config import DEFAULT_PATH
+        error_log_fn = DEFAULT_PATH / (args.sub_path + '/error.txt')
+        error_log_fn.mkdir(parents=True, exist_ok=True)
+        with open('error.txt', 'w') as f:
+            f.write(str(e))

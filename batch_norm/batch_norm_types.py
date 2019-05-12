@@ -1,4 +1,3 @@
-from functools import partial
 import tensorflow as tf
 
 
@@ -18,13 +17,16 @@ def batch_norm(scope, inputs, training_ph, *args):
         variance = tf.get_variable('variance', shape, tf.float32, tf.ones_initializer(), trainable=False)
 
     def train():
-        decay = 0.999
+        decay = 0.99
         batch_mean, batch_variance = tf.nn.moments(inputs, compress_axes)
         update_mean_op = tf.assign(mean, decay * mean + (1 - decay) * batch_mean)
         update_variance_op = tf.assign(variance, decay * variance + (1 - decay) * batch_variance)
-        with tf.control_dependencies([update_mean_op, update_variance_op]):
-            normed = tf.nn.batch_normalization(inputs, batch_mean, batch_variance, 0., 1., variance_epsilon=eps)
-            return normed
+
+        tf.add_to_collection(tf.GraphKeys.UPDATE_OPS, update_mean_op)
+        tf.add_to_collection(tf.GraphKeys.UPDATE_OPS, update_variance_op)
+
+        normed = tf.nn.batch_normalization(inputs, mean, variance, 0., 1., variance_epsilon=eps)
+        return normed
 
     def test():
         normed = tf.nn.batch_normalization(inputs, mean, variance, 0., 1., variance_epsilon=eps)
@@ -48,7 +50,7 @@ def rigid_batch_norm(scope, inputs, training_ph, bound, *args):
         variance = tf.get_variable('variance', shape, tf.float32, tf.ones_initializer(), trainable=False)
 
     def train():
-        decay = 0.999
+        decay = 0.99
         batch_mean, batch_variance = tf.nn.moments(inputs, compress_axes)
         pre_normalized = tf.nn.batch_normalization(inputs, batch_mean, batch_variance, 0., 1., variance_epsilon=eps)
 
@@ -56,13 +58,15 @@ def rigid_batch_norm(scope, inputs, training_ph, bound, *args):
         non_omitted_nums = tf.reduce_sum(tf.cast(non_omitted_bool, tf.float32), axis=compress_axes)
         omitted_inputs = tf.where(non_omitted_bool, inputs, tf.zeros_like(inputs, dtype=tf.float32))
         omitted_batch_mean = tf.reduce_sum(omitted_inputs, axis=compress_axes) / non_omitted_nums
-        omitted_batch_variance = (tf.reduce_sum(tf.square(omitted_inputs), axis=compress_axes) - tf.square(omitted_batch_mean)) / non_omitted_nums
 
         update_mean_op = tf.assign(mean, decay * mean + (1 - decay) * omitted_batch_mean)
-        update_variance_op = tf.assign(variance, decay * variance + (1 - decay) * omitted_batch_variance)
-        with tf.control_dependencies([update_mean_op, update_variance_op]):
-            normed = tf.nn.batch_normalization(inputs, omitted_batch_mean, omitted_batch_variance, 0., 1., variance_epsilon=eps)
-            return normed
+        update_variance_op = tf.assign(variance, decay * variance + (1 - decay) * batch_variance)
+
+        tf.add_to_collection(tf.GraphKeys.UPDATE_OPS, update_mean_op)
+        tf.add_to_collection(tf.GraphKeys.UPDATE_OPS, update_variance_op)
+
+        normed = tf.nn.batch_normalization(inputs, omitted_batch_mean, batch_variance, 0., 1., variance_epsilon=eps)
+        return normed
 
     def test():
         normed = tf.nn.batch_normalization(inputs, mean, variance, 0., 1., variance_epsilon=eps)

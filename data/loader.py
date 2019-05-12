@@ -8,6 +8,8 @@ class Loader:
 
         if data_type == 'mnist':
             self._raw_train_data, self._raw_test_data = tf.keras.datasets.mnist.load_data()
+        elif data_type == 'fashion_mnist':
+            self._raw_train_data, self._raw_test_data = tf.keras.datasets.fashion_mnist.load_data()
         elif data_type == 'cifar10':
             self._raw_train_data, self._raw_test_data = tf.keras.datasets.cifar10.load_data()
         elif data_type == 'cifar100':
@@ -28,6 +30,10 @@ class Loader:
         self.epoch_count = 0
         self._process_feature()
         self._process_label()
+
+        print('load data:', data_type)
+        print('train cases:', self._train_size)
+        print('test cases:', self._test_size)
 
     def _process_feature(self):
         train_feature = self._raw_train_data[0]
@@ -55,35 +61,40 @@ class Loader:
         else:
             return list(self._feature_shape), self._label_num
 
-    def get_train_batch(self, batch_size, flatten=False):
-        if self.train_checking + batch_size <= self._train_size:
-            x = self.train_feature[self.train_checking:self.train_checking + batch_size]
-            y = self.train_label[self.train_checking:self.train_checking + batch_size]
-            self.train_checking += batch_size
+    def get_train_data(self, flatten=False, shuffle=True):
+        if shuffle:
+            shuffled_indices = np.random.permutation(self._train_size)
+            train_features = self.train_feature[shuffled_indices]
+            train_labels = self.train_label[shuffled_indices]
         else:
-            start_nums = self.train_checking + batch_size - self._train_size
-            x = np.vstack([self.train_feature[self.train_checking:], self.train_feature[:start_nums+1]])
-            y = np.vstack([self.train_label[self.train_checking:], self.train_label[:start_nums+1]])
-            self.train_checking = start_nums
-            print('new epoch', self.epoch_count)
-            self.epoch_count += 1
+            train_features = self.train_feature
+            train_labels = self.train_label
 
         if flatten:
-            x = x.reshape(batch_size, self._feature_num)
+            return train_features.reshape(self._train_size, self._feature_num), train_labels
         else:
-            if x.ndim == 3:
-                x = x[..., np.newaxis]
-        return x, y
-
-    def get_test_batch(self, flatten=False):
-        if flatten:
-            return self.test_feature.reshape(self._test_size, self._feature_num), self.test_label
-        else:
-            if self.test_feature.ndim == 3:
-                return self.test_feature[..., np.newaxis], self.test_label
+            if train_features.ndim == 3:
+                return train_features[..., np.newaxis], train_labels
             else:
-                return self.test_feature, self.test_label
+                return train_features, train_labels
+
+    def get_test_data(self, flatten=False, shuffle=False):
+        if shuffle:
+            shuffled_indices = np.random.permutation(self._test_size)
+            test_features = self.test_feature[shuffled_indices]
+            test_labels = self.test_label[shuffled_indices]
+        else:
+            test_features = self.test_feature
+            test_labels = self.test_label
+
+        if flatten:
+            return test_features.reshape(self._test_size, self._feature_num), test_labels
+        else:
+            if test_features.ndim == 3:
+                return test_features[..., np.newaxis], test_labels
+            else:
+                return test_features, test_labels
 
 
 if __name__ == '__main__':
-    loader = Loader()
+    loader = Loader('fashion_mnist')

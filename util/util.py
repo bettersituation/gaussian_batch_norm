@@ -8,7 +8,7 @@ def iter_batch(features, labels, batch_size):
     pos = 0
     size = labels.shape[0]
     if size % batch_size != 0:
-        raise Exception('batch size must divide test size: {}'.format(size))
+        raise Exception('batch size must divide size: {}'.format(size))
 
     while pos != size:
         next_pos = min(pos + batch_size, size)
@@ -22,12 +22,69 @@ def calc_mean_of_means(means):
     return sum(means) / len(means)
 
 
-def calc_max_of_max(maxs):
-    return max(maxs)
+def calc_cross_entropy(predicts, labels):
+    loss = labels * np.log(predicts + 1e-8) + (1 - labels) * np.log(1 - predicts + 1e-8)
+    return - np.mean(loss.sum(1))
 
 
-def calc_min_of_min(mins):
-    return min(mins)
+def calc_acc(predicts, labels):
+    equals = np.equal(labels.argmax(1), predicts.argmax(1))
+    return equals.mean()
+
+
+def calc_mean(values):
+    return np.mean(values)
+
+
+def calc_max(values):
+    return np.max(values)
+
+
+def calc_min(values):
+    return np.min(values)
+
+
+def calc_norm(values):
+    return np.sqrt(np.sum(np.square(values)))
+
+
+def recursive_max(values_dict):
+    max_values = dict()
+    for k, v in values_dict.items():
+        max_values[k] = np.max(v)
+    return max_values
+
+
+def recursive_min(values_dict):
+    min_values = dict()
+    for k, v in values_dict.items():
+        min_values[k] = np.min(v)
+    return min_values
+
+
+def recursive_norm(values_dict):
+    norm_values = dict()
+    for k, v in values_dict.items():
+        norm_values[k] = calc_norm(v)
+    return norm_values
+
+
+def global_max(values_dict):
+    max_v = -np.inf
+    for v in values_dict.values():
+        local_max = calc_max(v)
+        if local_max > max_v:
+            max_v = local_max
+    return max_v
+
+
+def global_min(values_dict):
+    min_v = np.inf
+    for v in values_dict.values():
+        local_min = calc_min(v)
+        if local_min < min_v:
+            min_v = local_min
+    return min_v
 
 
 def augment_dict_values(dicts):
@@ -39,52 +96,12 @@ def augment_dict_values(dicts):
     return aug_dict
 
 
-def calc_cross_entropy(predicts, labels):
-    loss = labels * np.log(predicts + 1e-8) + (1 - labels) * np.log(1 - predicts + 1e-8)
-    return np.sum(loss)
-
-
-def calc_acc(predicts, labels):
-    equals = np.equal(labels.argmax(1), predicts.argmax(1))
-    return equals.mean()
-
-
-def calc_max(values):
-    return np.max(values)
-
-
-def calc_min(values):
-    return np.min(values)
-
-
 def calc_absmax(values):
     return np.max(np.abs(values))
 
 
 def calc_absmin(values):
     return np.min(np.abs(values))
-
-
-def calc_norm(values):
-    return np.sqrt(np.sum(values.dot(values.T)))
-
-
-def recursive_max(values_dict):
-    max_v = -np.inf
-    for v in values_dict.values():
-        local_max = calc_max(v)
-        if local_max > max_v:
-            max_v = local_max
-    return max_v
-
-
-def recursive_min(values_dict):
-    min_v = np.inf
-    for v in values_dict.values():
-        local_min = calc_min(v)
-        if local_min < min_v:
-            min_v = local_min
-    return min_v
 
 
 def recursive_absmax(values_dict):
