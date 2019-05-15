@@ -6,6 +6,8 @@ from track.values_log import ValuesLog
 from track.logger import CsvWriter
 from util.util import *
 
+_board_log = False
+
 
 def run_func(args):
     set_random_seed(RANDOM_SEED)
@@ -26,8 +28,9 @@ def run_func(args):
     normed_keys = net.get_normed_keys()
     gradient_keys = net.get_gradient_keys()
 
-    train_board = Tensorboard(folder_path + '/board/train')
-    valid_board = Tensorboard(folder_path + '/board/valid')
+    if _board_log:
+        train_board = Tensorboard(folder_path + '/board/train')
+        valid_board = Tensorboard(folder_path + '/board/valid')
     values_log = ValuesLog(normed_keys, gradient_keys)
 
     csv_writer = CsvWriter(folder_path + '/result.csv')
@@ -63,12 +66,13 @@ def run_func(args):
                        'gradient_min': grad_min_of_min,
                        }
 
-        train_board.add_scalars(log_scalars, i, prefix='stats')
-        train_board.add_scalars(normed_max, i, prefix='normed_max')
-        train_board.add_scalars(normed_min, i, prefix='normed_min')
-        train_board.add_scalars(gradient_max, i, prefix='gradient_max')
-        train_board.add_scalars(gradient_min, i, prefix='gradient_min')
-        train_board.add_scalars(gradient_norm, i, prefix='gradient_norm')
+        if _board_log:
+            train_board.add_scalars(log_scalars, i, prefix='stats')
+            train_board.add_scalars(normed_max, i, prefix='normed_max')
+            train_board.add_scalars(normed_min, i, prefix='normed_min')
+            train_board.add_scalars(gradient_max, i, prefix='gradient_max')
+            train_board.add_scalars(gradient_min, i, prefix='gradient_min')
+            train_board.add_scalars(gradient_norm, i, prefix='gradient_norm')
 
         print('{} epoch - train - reg loss: {:.6f} loss: {:.6f} - acc: {:.6f}'.format(i, reg_loss, loss, acc))
 
@@ -76,7 +80,7 @@ def run_func(args):
         csv_writer.writerow(contents)
 
         # valid
-        for batch_features, batch_labels in iter_batch(test_features, test_labels, TEST_BATCH_SIZE):
+        for batch_features, batch_labels in iter_batch(test_features, test_labels, args.batch_size):
             reg_loss, loss, acc, match, normed_values, gradients = net.test(batch_features, batch_labels)
 
             normed_max_values = recursive_max(normed_values)
@@ -84,9 +88,9 @@ def run_func(args):
 
             grad_max_values = recursive_max(gradients)
             grad_min_values = recursive_min(gradients)
-            grad_norm_values = recursive_norm(gradients)
+            # grad_norm_values = recursive_norm(gradients)
 
-            values_log.save_batchs(reg_loss, loss, acc, normed_max_values, normed_min_values, grad_max_values, grad_min_values, grad_norm_values)
+            values_log.save_batchs(reg_loss, loss, acc, normed_max_values, normed_min_values, grad_max_values, grad_min_values,)
 
         values_log.calc_batchs()
         reg_loss, loss, acc, normed_max, normed_min, gradient_max, gradient_min, gradient_norm = values_log.get_epochs()
@@ -102,12 +106,13 @@ def run_func(args):
                        'gradient_min': grad_min_of_min,
                        }
 
-        valid_board.add_scalars(log_scalars, i, prefix='stats')
-        valid_board.add_scalars(normed_max, i, prefix='normed_max')
-        valid_board.add_scalars(normed_min, i, prefix='normed_min')
-        valid_board.add_scalars(gradient_max, i, prefix='gradient_max')
-        valid_board.add_scalars(gradient_min, i, prefix='gradient_min')
-        valid_board.add_scalars(gradient_norm, i, prefix='gradient_norm')
+        if _board_log:
+            valid_board.add_scalars(log_scalars, i, prefix='stats')
+            valid_board.add_scalars(normed_max, i, prefix='normed_max')
+            valid_board.add_scalars(normed_min, i, prefix='normed_min')
+            valid_board.add_scalars(gradient_max, i, prefix='gradient_max')
+            valid_board.add_scalars(gradient_min, i, prefix='gradient_min')
+            valid_board.add_scalars(gradient_norm, i, prefix='gradient_norm')
 
         print('{} epoch - valid - reg_loss: {:.6f} loss: {:.6f} - acc: {:.6f}'.format(i, reg_loss, loss, acc))
 
@@ -121,12 +126,26 @@ if __name__ == '__main__':
     class Args:
         sub_path = 'test0'
         data_type = 'cifar10'
-        net_name = 'vgg16'
-        batch_norm = 'batch_norm'
-        bound = 5
-        reg_cf = 1
-        lr = 0.01
-        batch_size = 200
-        epoch = 50
+        net_name = 'resnet'
+        batch_norm = 'rigid_batch_norm'
+        bound = 3
+        reg_cf = 0.01
+        lr = 0.1
+        batch_size = 500
+        epoch = 200
 
     run_func(Args)
+
+# res kl reg 0.01 lr 0.01 epoch 50 - 62/58
+# res kl reg 0.01 lr 0.1 epoch 50 - 94/65
+# res bn lr 0.1 epoch
+
+# sub_path = 'test0'
+# data_type = 'cifar10'
+# net_name = 'resnet'
+# batch_norm = 'kl_batch_norm' / 'batch_norm'
+# bound = 5
+# reg_cf = 0.01
+# lr = 0.01
+# batch_size = 500
+# epoch = 200

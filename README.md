@@ -1,8 +1,5 @@
 # Rigid Batch Norm
 
-VERYDEEPCONVOLUTIONALNETWORKSFORLARGE-SCALEIMAGERECOGNITION # https://arxiv.org/pdf/1409.1556.pdf
-Batch Normalization: Accelerating Deep Network Training byReducing Internal Covariate Shift # https://arxiv.org/pdf/1502.03167.pdf
-
 
 ### Data
 1. Mnist
@@ -12,8 +9,8 @@ Batch Normalization: Accelerating Deep Network Training byReducing Internal Cova
 
 
 ### MODEL
-1. VGG16
-2. conv 5 * 5 * 32 -> max pool 2 -> conv 5 * 5 * 64 -> max pool 2 -> fc: 1024 -> fc: case
+1. simple
+2. small resnet
 
 
 ### Criteria
@@ -22,16 +19,11 @@ Batch Normalization: Accelerating Deep Network Training byReducing Internal Cova
 
 
 ### FIXED
-1. 50 epoch
-2. relu
-3. sgd
-4. xavier
-5. bn momentum 0.99
+1. relu
+2. sgd
+3. xavier
 
 
-### Comparison
-1. Normalization: None, BN, RBN, CRBN
-2. lr: 1e-2, 5e-3, 1e-3
-3. bound: 3, 5, 7
-4. reg cf: 0.5, 1, 1.5, 2
-5. batch size: 50, 100, 200
+### IDEA
+1. There is a possibility that there exist outliers, too big or small value. <br>
+If it is, batch mean is corrupted. So I think it is need to varianc

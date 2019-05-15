@@ -45,7 +45,7 @@ def calc_min(values):
 
 
 def calc_norm(values):
-    return np.sqrt(np.sum(np.square(values)))
+    return np.sqrt(np.sum(np.square(values.astype(np.float64))))
 
 
 def recursive_max(values_dict):

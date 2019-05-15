@@ -95,4 +95,4 @@ class Loader:
 
 
 if __name__ == '__main__':
-    loader = Loader('fashion_mnist')
+    loader = Loader('cifar10')

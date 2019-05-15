@@ -25,7 +25,7 @@ def get_parser():
                         )
     parser.add_argument('--batch_norm',
                         default=_bath_norm,
-                        choices=('none', 'batch_norm', 'rigid_batch_norm', 'clipped_rigid_batch_norm'),
+                        choices=('none', 'batch_norm', 'rigid_batch_norm', 'clipped_rigid_batch_norm', 'kl_batch_norm', 'kl_batch'),
                         help='batch norm which will be used (default: %(default)s) (choices: %(choices)s)'
                         )
     parser.add_argument('--bound',
